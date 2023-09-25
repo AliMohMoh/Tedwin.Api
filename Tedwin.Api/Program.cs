@@ -7,6 +7,7 @@ using System.Text;
 using Tedwin.Api.Data;
 using Tedwin.Api.Helpers;
 using Tedwin.Api.Services.AuthInfo;
+using Tedwin.Api.Services.BlogPostInfo;
 using Tedwin.Api.Services.TagsInfo;
 //using Tedwin.Api.Services.BlogPostInfo;
 
@@ -16,6 +17,7 @@ builder.Services.Configure<JWT>(builder.Configuration.GetSection("JWT"));
 builder.Services.AddIdentity<IdentityUser,IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddScoped<IAuthService,AuthService>();
 builder.Services.AddScoped<ITagService, TagService>();
+builder.Services.AddScoped<IBlogPostService, BlogPostService>();
 //builder.Services.AddScoped<IBlogPostService, BlogPostService>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

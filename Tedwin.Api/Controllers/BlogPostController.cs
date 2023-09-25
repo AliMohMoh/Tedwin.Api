@@ -1,92 +1,153 @@
-﻿//using Microsoft.AspNetCore.Authorization;
-//using Microsoft.AspNetCore.Identity;
-//using Microsoft.AspNetCore.Mvc;
-//using System;
-//using System.Security.Claims;
-//using System.Threading.Tasks;
-//using Tedwin.Api.Model;
-//using Tedwin.Api.Services.BlogPostInfo;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Tedwin.Api.Model;
+using Tedwin.Api.Model.Dto;
+using Tedwin.Api.Services.BlogPostInfo;
 
-//namespace Tedwin.Api.Controllers;
+namespace Tedwin.Api.Controllers;
 
-////[Authorize]
-//[ApiController]
-//[Route("api/[controller]")]
-//public class BlogPostsController : ControllerBase
-//{
-//    private readonly IBlogPostService _blogPostService;
+//[Authorize]
+[ApiController]
+[Route("api/[controller]")]
+public class BlogPostsController : ControllerBase
+{
+    private readonly IBlogPostService _blogPostService;
 
-//    public BlogPostsController(IBlogPostService blogPostService)
-//    {
-//        _blogPostService = blogPostService;
-//    }
+    public BlogPostsController(IBlogPostService blogPostService)
+    {
+        _blogPostService = blogPostService;
+    }
 
-//    [HttpGet(nameof(GetPageBlogPosts))]
-//    public async Task<ActionResult<IEnumerable<BlogPost>>> GetPageBlogPosts(string tagName = null, int pageNumber = 1, int pageSize = 10)
-//    {
-//        var blogPosts = await _blogPostService.GetPagedBlogPosts(tagName, pageNumber, pageSize);
+    [HttpGet]
+    public async Task<ActionResult<Response<List<BlogPost>>>> GetAllBlogPosts()
+    {
+        var blogPosts = await _blogPostService.GetAllBlogPostsAsync();
 
-//        return Ok(blogPosts);
-//    }
-//    [HttpGet]
-//    public async Task<ActionResult<List<BlogPost>>> GetAllBlogPosts()
-//    {
-//        var blogPosts = await _blogPostService.GetAllBlogPosts();
-//        return Ok(blogPosts);
-//    }
+        var response = new Response<List<BlogPost>>
+        {
+            Status = 200,
+            Title = "Success",
+            Data = blogPosts
+        };
 
-//    [HttpGet("{id}")]
-//    public async Task<ActionResult<BlogPost>> GetBlogPostById(Guid id)
-//    {
-//        var blogPost = await _blogPostService.GetBlogPostById(id);
-//        if (blogPost == null)
-//            return NotFound();
+        return Ok(response);
+    }
 
-//        return Ok(blogPost);
-//    }
+    [HttpGet("{id}")]
+    public async Task<ActionResult<Response<BlogPost>>> GetBlogPostById(Guid id)
+    {
+        var blogPost = await _blogPostService.GetBlogPostByIdAsync(id);
 
-//    [HttpPost]
-//    public async Task<ActionResult<BlogPost>> CreateBlogPost(BlogPost blogPost)
-//    {
-//        var createdBlogPost = await _blogPostService.CreateBlogPost(blogPost);
-//        return CreatedAtAction(nameof(GetBlogPostById), new { id = createdBlogPost.Id }, createdBlogPost);
-//    }
+        if (blogPost == null)
+        {
+            var notFoundResponse = new Response<BlogPost>
+            {
+                Status = 404,
+                Title = "Not Found"
+            };
 
-//    [HttpPut("{id}")]
-//    public async Task<ActionResult> UpdateBlogPost(Guid id, BlogPost updatedBlogPost)
-//    {
-//        var blogPost = await _blogPostService.GetBlogPostById(id);
-//        if (blogPost == null)
-//            return NotFound();
+            return NotFound(notFoundResponse);
+        }
 
-//        // Check if the authenticated user is the owner of the blog post
-//        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-//        if (blogPost.UserId != userId)
-//            return Forbid();
+        var successResponse = new Response<BlogPost>
+        {
+            Status = 200,
+            Title = "Success",
+            Data = blogPost
+        };
 
-//        var success = await _blogPostService.UpdateBlogPost(id, updatedBlogPost);
-//        if (!success)
-//            return NotFound();
+        return Ok(successResponse);
+    }
 
-//        return NoContent();
-//    }
+    [HttpPost]
+    public async Task<IActionResult> CreateBlogPost(BlogPost blogPost)
+    {
+        await _blogPostService.CreateBlogPostAsync(blogPost);
 
-//    [HttpDelete("{id}")]
-//    public async Task<ActionResult> DeleteBlogPost(Guid id)
-//    {
-//        var blogPost = await _blogPostService.GetBlogPostById(id);
-//        if (blogPost == null)
-//            return NotFound();
+        var createdResponse = new Response<BlogPost>
+        {
+            Status = 201,
+            Title = "Created",
+            Data = blogPost
+        };
 
-//        // Check if the authenticated user is the owner of the blog post
-//        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-//        if (blogPost.UserId != userId)
-//            return Forbid();
+        return CreatedAtAction(nameof(GetBlogPostById), new { id = blogPost.Id }, createdResponse);
+    }
 
-//        var success = await _blogPostService.DeleteBlogPost(id);
-//        if (!success)
-//            return NotFound();
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateBlogPost(Guid id, BlogPost blogPost)
+    {
+        if (!await _blogPostService.CanUserEditBlogPostAsync(User.Identity.Name, id))
+        {
+            var forbiddenResponse = new Response<string>
+            {
+                Status = 403,
+                Title = "Forbidden",
+                Errors = new Dictionary<string, object>
+                {
+                    { "message", "You are not authorized to edit this blog post." }
+                }
+            };
 
-//        return NoContent();
-//    }
-//}
+            return StatusCode(403, forbiddenResponse);
+        }
+
+        if (id != blogPost.Id)
+        {
+            var badRequestResponse = new Response<string>
+            {
+                Status = 400,
+                Title = "Bad Request",
+                Errors = new Dictionary<string, object>
+                {
+                    { "message", "The provided ID does not match the ID in the blog post object." }
+                }
+            };
+
+            return BadRequest(badRequestResponse);
+        }
+
+        await _blogPostService.UpdateBlogPostAsync(blogPost);
+
+        var successResponse = new Response<string>
+        {
+            Status = 200,
+            Title = "Success"
+        };
+
+        return Ok(successResponse);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteBlogPost(Guid id)
+    {
+        if (!await _blogPostService.CanUserEditBlogPostAsync(User.Identity.Name, id))
+        {
+            var forbiddenResponse = new Response<string>
+            {
+                Status = 403,
+                Title = "Forbidden",
+                Errors = new Dictionary<string, object>
+                {
+                    { "message", "You are not authorized to delete this blog post." }
+                }
+            };
+
+            return StatusCode(403, forbiddenResponse);
+        }
+
+        await _blogPostService.DeleteBlogPostAsync(id);
+
+        var successResponse = new Response<string>
+        {
+            Status = 200,
+            Title = "Success"
+        };
+
+        return Ok(successResponse);
+    }
+}
