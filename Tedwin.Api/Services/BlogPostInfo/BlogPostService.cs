@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tedwin.Api.Data;
 using Tedwin.Api.Model;
+using Tedwin.Api.Model.Dto;
 
 namespace Tedwin.Api.Services.BlogPostInfo;
 
@@ -52,5 +53,30 @@ public class BlogPostService : IBlogPostService
     {
         var blogPost = await _context.BlogPosts.FirstOrDefaultAsync(bp => bp.Id == blogPostId);
         return blogPost != null && blogPost.UserId == userId;
+    }
+    public async Task<Response<List<BlogPost>>> GetPaginatedBlogPostsAsync(int pageIndex, int pageSize)
+    {
+        var totalItems = await _context.BlogPosts.CountAsync();
+        var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+        var skip = (pageIndex - 1) * pageSize;
+        var blogPosts = await _context.BlogPosts.Skip(skip).Take(pageSize).ToListAsync();
+
+        var response = new Response<List<BlogPost>>
+        {
+            Status = 200,
+            Title = "Success",
+            Errors = null,
+            Data = blogPosts,
+            PageInfo = new PaginationInfo
+            {
+                TotalPages = totalPages,
+                TotalItems = totalItems,
+                PageIndex = pageIndex,
+                PageSize = pageSize
+            }
+        };
+
+        return response;
     }
 }
