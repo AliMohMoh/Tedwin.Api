@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Tedwin.Api.Model;
+using Tedwin.Api.Model.Dto;
 using Tedwin.Api.Services.AuthInfo;
 
 namespace Tedwin.Api.Controllers
@@ -10,12 +13,39 @@ namespace Tedwin.Api.Controllers
     public class AuthController : Controller
     {
         private readonly IAuthService _authService;
+        private readonly UserManager<IdentityUser> _userManager;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, UserManager<IdentityUser> userManager)
         {
             _authService = authService;
+            _userManager = userManager;
         }
+        [Authorize]
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userId = User.FindFirstValue("uid");
+            var user = await _userManager.FindByIdAsync(userId);
 
+            if (user is null)
+            {
+                return NotFound();
+            }
+
+            var userProfile = new UserProfile
+            {
+                UserName = user.UserName,
+                Email = user.Email,
+                // Set other properties of the user profile
+            };
+
+            return Ok(new Response<UserProfile>
+            {
+                Status = 200,
+                Title = "Success",
+                Data = userProfile
+            });
+        }
         [HttpPost("register")]
         public async Task<IActionResult> RegisterAsync([FromBody] RegisterModel model)
         {

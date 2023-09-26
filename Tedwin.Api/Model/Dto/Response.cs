@@ -1,4 +1,6 @@
-﻿namespace Tedwin.Api.Model.Dto;
+﻿using Microsoft.AspNetCore.Http;
+
+namespace Tedwin.Api.Model.Dto;
 
 public class Response<T>
 {
@@ -7,6 +9,7 @@ public class Response<T>
     public Dictionary<string, object> Errors { get; set; }
     public T Data { get; set; }
     public PaginationInfo? PageInfo { get; set; }
+   
 }
 public class PaginationInfo
 {
