@@ -12,9 +12,9 @@ public class BlogPost
     public string Title { get; set; }
     [Required, MaxLength(5000)]
     public string Content { get; set; }
-    //public ICollection<Tag> Tags { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public ICollection<BlogPostTags> BlogPostTags { get; set; }
-    //public IdentityUser User { get; set; }
+
     public string UserId { get; set; }
 }
