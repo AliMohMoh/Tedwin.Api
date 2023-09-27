@@ -8,6 +8,7 @@ using Tedwin.Api.Data;
 using Tedwin.Api.Helpers;
 using Tedwin.Api.Services.AuthInfo;
 using Tedwin.Api.Services.BlogPostInfo;
+using Tedwin.Api.Services.SearchInfo;
 using Tedwin.Api.Services.TagsInfo;
 //using Tedwin.Api.Services.BlogPostInfo;
 
@@ -18,6 +19,7 @@ builder.Services.AddIdentity<IdentityUser,IdentityRole>().AddEntityFrameworkStor
 builder.Services.AddScoped<IAuthService,AuthService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IBlogPostService, BlogPostService>();
+builder.Services.AddScoped<ISearchAndFilterService, SearchAndFilterService>();
 //builder.Services.AddScoped<IBlogPostService, BlogPostService>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
