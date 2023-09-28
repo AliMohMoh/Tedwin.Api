@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Tedwin.Api.Model;
 using Tedwin.Api.Model.Dto;
 using Tedwin.Api.Services.TagsInfo;
@@ -54,7 +55,7 @@ public class TagsController : ControllerBase
         };
         return Ok(response);
     }
-
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> CreateTag(Tag tag)
     {
@@ -68,7 +69,7 @@ public class TagsController : ControllerBase
         };
         return Ok(response);
     }
-
+    [Authorize]
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateTag(int id, Tag tag)
     {
@@ -87,7 +88,7 @@ public class TagsController : ControllerBase
         };
         return Ok(response);
     }
-
+    [Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteTag(int id)
     {
