@@ -10,7 +10,7 @@ using Tedwin.Api.Services.BlogPostInfo;
 
 namespace Tedwin.Api.Controllers;
 
-//[Authorize]
+
 [ApiController]
 [Route("api/[controller]")]
 public class BlogPostsController : ControllerBase
@@ -21,13 +21,14 @@ public class BlogPostsController : ControllerBase
     {
         _blogPostService = blogPostService;
     }
-
+    [AllowAnonymous]
     [HttpGet(nameof(GetPageBlogPosts))]
     public async Task<ActionResult<Response<List<BlogPost>>>> GetPageBlogPosts(int pageIndex = 1, int pageSize = 100)
     {
         var response = await _blogPostService.GetPaginatedBlogPostsAsync(pageIndex, pageSize);
         return Ok(response);
     }
+    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<Response<List<BlogPost>>>> GetAllBlogPosts()
     {
@@ -42,7 +43,7 @@ public class BlogPostsController : ControllerBase
 
         return Ok(response);
     }
-
+    [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<ActionResult<Response<BlogPost>>> GetBlogPostById(Guid id)
     {
@@ -68,7 +69,7 @@ public class BlogPostsController : ControllerBase
 
         return Ok(successResponse);
     }
-
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> CreateBlogPost(BlogPost blogPost)
     {
@@ -83,7 +84,7 @@ public class BlogPostsController : ControllerBase
 
         return CreatedAtAction(nameof(GetBlogPostById), new { id = blogPost.Id }, createdResponse);
     }
-
+    [Authorize]
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateBlogPost(Guid id, BlogPost blogPost)
     {
@@ -127,7 +128,7 @@ public class BlogPostsController : ControllerBase
 
         return Ok(successResponse);
     }
-
+    [Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBlogPost(Guid id)
     {
