@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Tedwin.Api.Data;
 using Tedwin.Api.Model;
 using Tedwin.Api.Model.Dto;
 using Tedwin.Api.Services.BlogPostInfo;
@@ -16,10 +17,13 @@ namespace Tedwin.Api.Controllers;
 public class BlogPostsController : ControllerBase
 {
     private readonly IBlogPostService _blogPostService;
+    private readonly ApplicationDbContext _context;
 
-    public BlogPostsController(IBlogPostService blogPostService)
+    public BlogPostsController(IBlogPostService blogPostService, ApplicationDbContext context)
     {
         _blogPostService = blogPostService;
+        _context = context;
+        
     }
     [AllowAnonymous]
     [HttpPost(nameof(GetPageBlogPosts))]
@@ -73,6 +77,20 @@ public class BlogPostsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateBlogPost(BlogPost blogPost)
     {
+
+        // Retrieve the user ID from the token
+        var claimsIdentity = User.Identity as ClaimsIdentity;
+        var userIdClaim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+        {
+            // Handle the case where the user ID claim is missing or not found in the token
+            return BadRequest("User ID claim not found in the token.");
+        }
+
+        string userId = userIdClaim.Value;
+
+        blogPost.UserId = userId; // Assign the user ID to the UserId property
+
         await _blogPostService.CreateBlogPostAsync(blogPost);
 
         var createdResponse = new Response<BlogPost>
@@ -85,10 +103,14 @@ public class BlogPostsController : ControllerBase
         return CreatedAtAction(nameof(GetBlogPostById), new { id = blogPost.Id }, createdResponse);
     }
     [Authorize]
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateBlogPost(Guid id, BlogPost blogPost)
+    [HttpPut]
+    public async Task<IActionResult> UpdateBlogPost(BlogPost blogPost)
     {
-        if (!await _blogPostService.CanUserEditBlogPostAsync(User.Identity.Name, id))
+        var claimsIdentity = User.Identity as ClaimsIdentity;
+        var userIdClaim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+        string userId = userIdClaim.Value;
+
+        if (!await _blogPostService.CanUserEditBlogPostAsync(userId,blogPost.Id))
         {
             var forbiddenResponse = new Response<string>
             {
@@ -103,20 +125,21 @@ public class BlogPostsController : ControllerBase
             return StatusCode(403, forbiddenResponse);
         }
 
-        if (id != blogPost.Id)
-        {
-            var badRequestResponse = new Response<string>
-            {
-                Status = 400,
-                Title = "Bad Request",
-                Errors = new Dictionary<string, object>
-                {
-                    { "message", "The provided ID does not match the ID in the blog post object." }
-                }
-            };
+        //var exit = await _context.BlogPosts.FindAsync(blogPost.Id);
+        // if (exit is null)
+        //{
+        //    var badRequestResponse = new Response<string>
+        //    {
+        //        Status = 400,
+        //        Title = "Bad Request",
+        //        Errors = new Dictionary<string, object>
+        // {
+        //     { "message", "The provided ID does not match the ID in the blog post object." }
+        // }
+        //    };
 
-            return BadRequest(badRequestResponse);
-        }
+        //    return BadRequest(badRequestResponse);
+        //}
 
         await _blogPostService.UpdateBlogPostAsync(blogPost);
 
@@ -132,7 +155,11 @@ public class BlogPostsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBlogPost(Guid id)
     {
-        if (!await _blogPostService.CanUserEditBlogPostAsync(User.Identity.Name, id))
+        var claimsIdentity = User.Identity as ClaimsIdentity;
+        var userIdClaim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+        string userId = userIdClaim.Value;
+
+        if (!await _blogPostService.CanUserEditBlogPostAsync(userId, id))
         {
             var forbiddenResponse = new Response<string>
             {

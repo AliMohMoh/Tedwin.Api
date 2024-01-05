@@ -14,7 +14,8 @@ public class BlogPost
     public string Content { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
     public ICollection<BlogPostTags> BlogPostTags { get; set; }
 
-    public string UserId { get; set; }
+    public string? UserId { get; set; }
 }

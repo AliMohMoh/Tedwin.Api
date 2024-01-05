@@ -15,11 +15,11 @@ public class ApplicationDbContext : IdentityDbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<BlogPost>()
-             .HasOne<IdentityUser>()
-             .WithMany()
-             .HasForeignKey(bp => bp.UserId)
-             .OnDelete(DeleteBehavior.Restrict);
+        //modelBuilder.Entity<BlogPost>()
+        //     .HasOne<IdentityUser>()
+        //     .WithMany()
+        //     .HasForeignKey(bp => bp.UserId)
+        //     .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<BlogPostTags>()
             .HasKey(bpt => new { bpt.BlogPostId, bpt.TagId });
