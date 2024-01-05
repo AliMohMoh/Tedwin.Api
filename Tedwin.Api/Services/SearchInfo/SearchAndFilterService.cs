@@ -3,6 +3,7 @@ using Tedwin.Api.Data;
 using Tedwin.Api.Model;
 using System.Linq;
 using Tedwin.Api.Model.Dto;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Tedwin.Api.Services.SearchInfo;
 
@@ -15,23 +16,23 @@ public class SearchAndFilterService : ISearchAndFilterService
         _dbContext = dbContext;
     }
 
-    public async Task<Response<List<BlogPostWithTags>>> SearchAsync(string searchTerm, List<string> tagNames, int pageNumber, int pageSize)
+    public async Task<Response<List<BlogPostWithTags>>> SearchAsync(SearchWithFilter searchWithFilter)
     {
         var response = new Response<List<BlogPostWithTags>>();
 
         try
         {
-            var blogPostsWithTags = await GetBlogPostsWithTagsAsync(searchTerm, tagNames, pageNumber, pageSize);
+            var blogPostsWithTags = await GetBlogPostsWithTagsAsync(searchWithFilter);
 
-            var totalItems = await CalculateTotalItemsAsync(searchTerm, tagNames);
-            var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            var totalItems = await CalculateTotalItemsAsync(searchWithFilter.SearchTerm, searchWithFilter.TagNames);
+            var totalPages = (int)Math.Ceiling((double)totalItems / searchWithFilter.PageSize);
 
             var pageInfo = new PaginationInfo
             {
                 TotalPages = totalPages,
                 TotalItems = totalItems,
-                PageIndex = pageNumber,
-                PageSize = pageSize
+                PageIndex = searchWithFilter.PageIndex,
+                PageSize = searchWithFilter.PageSize
             };
 
             response.Status = 200;
@@ -74,19 +75,19 @@ public class SearchAndFilterService : ISearchAndFilterService
 
         return totalItems;
     }
-    private async Task<List<BlogPostWithTags>> GetBlogPostsWithTagsAsync(string searchTerm, List<string> tagNames, int pageNumber, int pageSize)
+    private async Task<List<BlogPostWithTags>> GetBlogPostsWithTagsAsync(SearchWithFilter searchWithFilter)
     {
         var query = _dbContext.BlogPosts.AsQueryable();
 
-        if (!string.IsNullOrEmpty(searchTerm))
+        if (!string.IsNullOrEmpty(searchWithFilter.SearchTerm))
         {
-            query = query.Where(post => post.Title.Contains(searchTerm));
+            query = query.Where(post => post.Title.Contains(searchWithFilter.SearchTerm));
         }
 
-        if (tagNames != null && tagNames.Any())
+        if (searchWithFilter.TagNames != null && searchWithFilter.TagNames.Any())
         {
             var tagIds = await _dbContext.Tags
-                .Where(tag => tagNames.Contains(tag.Name))
+                .Where(tag => searchWithFilter.TagNames.Contains(tag.Name))
                 .Select(tag => tag.Id)
                 .ToListAsync();
 
@@ -94,8 +95,8 @@ public class SearchAndFilterService : ISearchAndFilterService
         }
 
         var results = await query
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((searchWithFilter.PageIndex - 1) * searchWithFilter.PageSize)
+            .Take(searchWithFilter.PageSize)
             .ToListAsync();
 
         var blogPostsWithTags = results.Select(post => new BlogPostWithTags

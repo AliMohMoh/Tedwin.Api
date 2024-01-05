@@ -12,5 +12,5 @@ public interface IBlogPostService
     Task UpdateBlogPostAsync(BlogPost blogPost);
     Task DeleteBlogPostAsync(Guid id);
     Task<bool> CanUserEditBlogPostAsync(string userId, Guid blogPostId);
-    Task<Response<List<BlogPost>>> GetPaginatedBlogPostsAsync(int pageIndex, int pageSize);
+    Task<Response<List<BlogPost>>> GetPaginatedBlogPostsAsync(PaginationInfo pagination);
 }

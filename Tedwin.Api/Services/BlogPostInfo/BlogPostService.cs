@@ -54,13 +54,13 @@ public class BlogPostService : IBlogPostService
         var blogPost = await _context.BlogPosts.FirstOrDefaultAsync(bp => bp.Id == blogPostId);
         return blogPost != null && blogPost.UserId == userId;
     }
-    public async Task<Response<List<BlogPost>>> GetPaginatedBlogPostsAsync(int pageIndex, int pageSize)
+    public async Task<Response<List<BlogPost>>> GetPaginatedBlogPostsAsync(PaginationInfo pagination /*int pageIndex, int pageSize*/)
     {
         var totalItems = await _context.BlogPosts.CountAsync();
-        var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+        var totalPages = (int)Math.Ceiling((double)totalItems / pagination.PageSize);
 
-        var skip = (pageIndex - 1) * pageSize;
-        var blogPosts = await _context.BlogPosts.Skip(skip).Take(pageSize).ToListAsync();
+        var skip = (pagination.PageIndex - 1) * pagination.PageSize;
+        var blogPosts = await _context.BlogPosts.Skip(skip).Take(pagination.PageSize).ToListAsync();
 
         var response = new Response<List<BlogPost>>
         {
@@ -72,8 +72,8 @@ public class BlogPostService : IBlogPostService
             {
                 TotalPages = totalPages,
                 TotalItems = totalItems,
-                PageIndex = pageIndex,
-                PageSize = pageSize
+                PageIndex = pagination.PageIndex,
+                PageSize = pagination.PageSize
             }
         };
 

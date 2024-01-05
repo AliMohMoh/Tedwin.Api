@@ -5,5 +5,5 @@ namespace Tedwin.Api.Services.SearchInfo;
 
 public interface ISearchAndFilterService
 {
-    Task<Response<List<BlogPostWithTags>>> SearchAsync(string searchTerm, List<string> tagNames, int pageNumber, int pageSize);
+    Task<Response<List<BlogPostWithTags>>> SearchAsync(SearchWithFilter searchWithFilter);
 }

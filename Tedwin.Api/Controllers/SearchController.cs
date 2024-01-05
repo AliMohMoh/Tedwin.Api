@@ -17,10 +17,10 @@ public class SearchController : ControllerBase
         _searchAndFilterService = searchAndFilterService;
     }
 
-    [HttpGet("SearchAndFilter")]
-    public async Task<ActionResult<Response<List<BlogPostWithTags>>>> Search(string? searchTerm,[FromQuery] List<string> tagNames, int pageNumber, int pageSize)
+    [HttpPost("SearchAndFilter")]
+    public async Task<ActionResult<Response<List<BlogPostWithTags>>>> Search(SearchWithFilter searchWithFilter)
     {
-        var response = await _searchAndFilterService.SearchAsync(searchTerm, tagNames, pageNumber, pageSize);
+        var response = await _searchAndFilterService.SearchAsync(searchWithFilter);
         return StatusCode(response.Status, response);
     }
 }

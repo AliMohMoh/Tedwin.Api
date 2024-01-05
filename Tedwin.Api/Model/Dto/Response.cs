@@ -13,8 +13,17 @@ public class Response<T>
 }
 public class PaginationInfo
 {
-    public int TotalPages { get; set; }
-    public int TotalItems { get; set; }
+    public int? TotalPages { get; set; }
+    public int? TotalItems { get; set; }
     public int PageIndex { get; set; }
     public int PageSize { get; set; }
 }
+
+public class SearchWithFilter
+{
+    public string? SearchTerm { get; set; }
+    public List<string>? TagNames { get; set; }
+    public int PageIndex { get; set; }
+    public int PageSize { get; set; }
+}
+

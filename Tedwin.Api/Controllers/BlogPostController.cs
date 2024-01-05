@@ -22,10 +22,10 @@ public class BlogPostsController : ControllerBase
         _blogPostService = blogPostService;
     }
     [AllowAnonymous]
-    [HttpGet(nameof(GetPageBlogPosts))]
-    public async Task<ActionResult<Response<List<BlogPost>>>> GetPageBlogPosts(int pageIndex = 1, int pageSize = 100)
+    [HttpPost(nameof(GetPageBlogPosts))]
+    public async Task<ActionResult<Response<List<BlogPost>>>> GetPageBlogPosts(PaginationInfo pagination)
     {
-        var response = await _blogPostService.GetPaginatedBlogPostsAsync(pageIndex, pageSize);
+        var response = await _blogPostService.GetPaginatedBlogPostsAsync(pagination);
         return Ok(response);
     }
     [AllowAnonymous]
